@@ -1,4 +1,4 @@
-name: SandboxAQ AQtive Guard AI-SPM Inventory Scan
+name: SandboxAQ AQtive Guard AI SPM Inventory Scan
 description: Scans the repository contents for AI usage and reports findings back to SandboxAQ AQtive Guard
 author: SB Technology Inc.
 branding:
@@ -25,12 +25,18 @@ runs:
       # Use client ID and secret to obtain an AQG token from the instance.
       # Store the token received in the AQG_TOKEN environment variable.
       - name: Obtain AQG token
-        run: 'echo AQG_TOKEN=$(curl -s -L -X POST ${{ inputs.aqg_instance }}/authv2/realms/aqtiveguard/protocol/openid-connect/token -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=client_credentials" -d "client_id=${{ inputs.aqg_client_id }}" -d "client_secret=${{ inputs.aqg_client_secret }}" | jq -r ".access_token") >> "$GITHUB_ENV"'
+        env: 
+          AQG_INSTANCE: ${{ inputs.aqg_instance }}
+          AQG_CLIENT_ID: ${{ inputs.aqg_client_id }}
+          AQG_CLIENT_SECRET: ${{ inputs.aqg_client_secret }}
+        run: 'echo AQG_TOKEN=$(curl -s -L -X POST $AQG_INSTANCE/authv2/realms/aqtiveguard/protocol/openid-connect/token -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=client_credentials" -d "client_id=$AQG_CLIENT_ID" -d "client_secret=$AQG_CLIENT_SECRET" | jq -r ".access_token") >> "$GITHUB_ENV"'
         shell: bash
 
       # Get the image as a tar. Authenticate using AQG_TOKEN.
       - name: Download Docker image
-        run: 'curl -s -L --output image.tar ${{ inputs.aqg_instance }}/api/v4/downloads/sensors/aispm_inventory_scanner/1.0.0 -H "Authorization: Bearer $AQG_TOKEN"'
+        env: 
+          AQG_INSTANCE: ${{ inputs.aqg_instance }}
+        run: 'curl -s -L --output image.tar $AQG_INSTANCE/api/v4/downloads/sensors/aispm_inventory_scanner/1.0.0 -H "Authorization: Bearer $AQG_TOKEN"'
         shell: bash
 
       # Load image into the local docker cache
@@ -46,5 +52,7 @@ runs:
       # The usual way would be doing this via "uses: docker://image:tag" but that doesn't work with local images
       # since GH Actions tries to pull them from the web. So we run it manually here.
       - name: Run AI SPM scanner container
-        run: docker run --rm -e "HOME" -e GITHUB_WORKSPACE="/github/workspace" -e GITHUB_WORKFLOW -e GITHUB_ACTION -e GITHUB_ACTOR -e GITHUB_EVENT_NAME -e GITHUB_REPOSITORY -e GITHUB_REF -e GITHUB_SHA -e AQG_TOKEN -e AQG_INSTANCE=${{ inputs.aqg_instance }} -v "/home/runner/work/_temp/_github_home":"/github/home" -v "/home/runner/work/_temp/_github_workflow":"/github/workflow" -v "/home/runner/work/_temp/_runner_file_commands":"/github/file_commands" -v $GITHUB_WORKSPACE:"/github/workspace" aispm-action-test:latest
+        env: 
+          AQG_INSTANCE: ${{ inputs.aqg_instance }}
+        run: docker run --rm -e "HOME" -e GITHUB_WORKSPACE="/github/workspace" -e GITHUB_WORKFLOW -e GITHUB_ACTION -e GITHUB_ACTOR -e GITHUB_EVENT_NAME -e GITHUB_REPOSITORY -e GITHUB_REF -e GITHUB_SHA -e AQG_TOKEN -e AQG_INSTANCE="$AQG_INSTANCE" -v "/home/runner/work/_temp/_github_home":"/github/home" -v "/home/runner/work/_temp/_github_workflow":"/github/workflow" -v "/home/runner/work/_temp/_runner_file_commands":"/github/file_commands" -v $GITHUB_WORKSPACE:"/github/workspace" aispm-action-test:latest
         shell: bash
