@@ -17,7 +17,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@master
       - name: Run AI-SPM Inventory detection
-        uses: sandbox-quantum/aqg-actions/aispm-inventory-action@main
+        uses: sandbox-quantum/aispm-inventory-action@main
         with:
           aqg_instance: https://some_url
           aqg_client_id: ${{ secrets.AQG_CLIENT_ID }}
