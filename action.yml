@@ -1,0 +1,58 @@
+name: SandboxAQ AQtive Guard AI SPM Inventory Scan
+description: Scans the repository contents for AI usage and reports findings back to SandboxAQ AQtive Guard
+author: SB Technology Inc.
+branding:
+  icon: alert-triangle
+  color: yellow
+inputs: 
+  aqg_instance:
+    description: URL of your AQtive Guard instance
+    required: true
+  aqg_client_id:
+    description: Client ID for authentication
+    required: true
+  aqg_client_secret:
+    description: Client secret for authentication
+    required: true
+runs:
+  using: composite
+  steps:
+      - run: echo "Job triggered by ${{ github.event_name }}, running on ${{ github.repository }} @ ${{ github.ref }}"
+        shell: bash
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      # Use client ID and secret to obtain an AQG token from the instance.
+      # Store the token received in the AQG_TOKEN environment variable.
+      - name: Obtain AQG token
+        env: 
+          AQG_INSTANCE: ${{ inputs.aqg_instance }}
+          AQG_CLIENT_ID: ${{ inputs.aqg_client_id }}
+          AQG_CLIENT_SECRET: ${{ inputs.aqg_client_secret }}
+        run: 'echo AQG_TOKEN=$(curl -s -L -X POST $AQG_INSTANCE/authv2/realms/aqtiveguard/protocol/openid-connect/token -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=client_credentials" -d "client_id=$AQG_CLIENT_ID" -d "client_secret=$AQG_CLIENT_SECRET" | jq -r ".access_token") >> "$GITHUB_ENV"'
+        shell: bash
+
+      # Get the image as a tar. Authenticate using AQG_TOKEN.
+      - name: Download Docker image
+        env: 
+          AQG_INSTANCE: ${{ inputs.aqg_instance }}
+        run: 'curl -s -L --output image.tar $AQG_INSTANCE/api/v4/downloads/sensors/aispm_inventory_scanner/1.0.0 -H "Authorization: Bearer $AQG_TOKEN"'
+        shell: bash
+
+      # Load image into the local docker cache
+      - name: Load Docker image
+        run: docker load --input image.tar
+        shell: bash
+
+      # Tag the image, so it doesn't try and pull it from the web (and then we reference the tag subsequently)
+      - name: Tag image
+        run: docker tag bazel/saq/pqc/aispm_inventory:latest aispm-action-test:latest
+        shell: bash
+
+      # The usual way would be doing this via "uses: docker://image:tag" but that doesn't work with local images
+      # since GH Actions tries to pull them from the web. So we run it manually here.
+      - name: Run AI SPM scanner container
+        env: 
+          AQG_INSTANCE: ${{ inputs.aqg_instance }}
+        run: docker run --rm -e "HOME" -e GITHUB_WORKSPACE="/github/workspace" -e GITHUB_WORKFLOW -e GITHUB_ACTION -e GITHUB_ACTOR -e GITHUB_EVENT_NAME -e GITHUB_REPOSITORY -e GITHUB_REF -e GITHUB_SHA -e AQG_TOKEN -e AQG_INSTANCE="$AQG_INSTANCE" -v "/home/runner/work/_temp/_github_home":"/github/home" -v "/home/runner/work/_temp/_github_workflow":"/github/workflow" -v "/home/runner/work/_temp/_runner_file_commands":"/github/file_commands" -v $GITHUB_WORKSPACE:"/github/workspace" aispm-action-test:latest
+        shell: bash
