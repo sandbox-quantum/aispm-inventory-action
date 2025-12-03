@@ -38,4 +38,4 @@ Properties are passed to GitHub Action via explicit `with` input variables. For 
 ## About
 Scans the repository contents for AI usage and reports findings back to AQtive Guard by SandboxAQ.
 
-[Find out more](https://www.aqtiveguard.com/solutions/ai-spm).
+[Learn more](https://www.aqtiveguard.com/solutions/ai-spm).
