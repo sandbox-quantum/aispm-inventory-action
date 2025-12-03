@@ -1,14 +1,15 @@
-# SandboxAQ AQtive Guard AI SPM Inventory Scan
+# AQtive Guard AI-SPM Inventory Scan by SandboxAQ
 
-A [GitHub Action](https://github.com/features/actions) for using [SandboxAQ](https://www.sandboxaq.com/) AQtive Guard
-AI SPM functionality. This action scans your code using static analysis to detect AI assets (such as models, agents, MCP servers, ...).
-Once the inventory is created, it'll be sent to your AQtive Guard instance, where it'll be enriched
-with additional information and analyzed for issues. You can inspect the results in your AQtive Guard web interface.
+A [GitHub Action](https://github.com/features/actions) for using [AQtive Guard](https://www.aqtiveguard.com/) AI-SPM functionality by [SandboxAQ](https://www.sandboxaq.com/). This action performs static analysis on your code to detect AI assets (such as models, agents, and MCP servers), creating an inventory. This inventory is then  sent to your AQtive Guard instance, where it's enriched with additional information and analyzed for issues. You can view the results in the AQtive Guard web interface. Refer to the [AQtive Guard AI-SPM user guide](https://docs.aqtiveguard.com/aqg-aispm/) for details. 
 
-You can use the Action as follows:
+
+
+## Configuration
+You can configure the Action as shown in the following example::
+
 
 ```yaml
-name: Example workflow for Python using SandboxAQ AQtive Guard AI SPM
+name: Example workflow for Python using AQtive Guard AI-SPM Inventory Scan by SandboxAQ
 on: push
 jobs:
   security:
@@ -25,14 +26,16 @@ jobs:
 ```
 
 ## Properties
+Properties are passed to GitHub Action via explicit `with` input variables. For security, we strongly recommend using [GitHub secrets](https://docs.github.com/en/enterprise-cloud@latest/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets) for the sensitive input variables, `aqg_client_id` and `aqg_client_secret`.
 
-This Action has properties which are passed to the underlying image, passed as an explicit input variable (using `with`).
-We recommend [using secrets](https://docs.github.com/en/enterprise-cloud@latest/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets)
-for `aqg_client_id` and `aqg_client_secret`.
 
 | Property          | Required | Description                                                                           |
 | ----------------- | -------- | ------------------------------------------------------------------------------------- |
-| aqg_instance      | yes      | URL of your AQtive Guard instance                                                     |
-| aqg_client_id     | yes      | Client ID for authentication                                                          |
-| aqg_client_secret | yes      | Authentication token to connect to AQtive Guard                                       |
+| `aqg_instance`      | yes      | URL of your AQtive Guard instance                                                     |
+| `aqg_client_id`     | yes      | Client ID for authentication                                                          |
+| `aqg_client_secret` | yes      | Client secret for authentication                                       |
 
+## About
+Scans the repository contents for AI usage and reports findings back to AQtive Guard by SandboxAQ.
+
+[Find out more](https://www.aqtiveguard.com/solutions/ai-spm).
